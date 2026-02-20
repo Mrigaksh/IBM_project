@@ -1,0 +1,7 @@
+path: C:/Users/Admin/Documents/Clg_stuff/SEM8/IBM_proj/data/raw
+
+train: images/train
+val: images/test
+
+nc: 1
+names: ['number_plate']
