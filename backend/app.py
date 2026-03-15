@@ -23,6 +23,7 @@ from models import db
 from routes.auth import auth_bp
 from routes.detection import detect_bp
 from routes.admin import admin_bp
+from routes.chat import chat_bp
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,6 +65,7 @@ def create_app(config_class=None) -> Flask:
     app.register_blueprint(auth_bp)    # /auth/register  /auth/login  /auth/me
     app.register_blueprint(detect_bp)  # /detect  /history  /stats  /export  /image
     app.register_blueprint(admin_bp)   # /admin/*
+    app.register_blueprint(chat_bp)    # /chat
 
     # ── Create DB tables + seed admin ──────────────────────────────────────
     with app.app_context():
