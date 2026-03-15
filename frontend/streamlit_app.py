@@ -132,6 +132,8 @@ def sidebar():
             _nav("👤 User Management",  "admin_users")
 
         st.markdown("---")
+        _nav("💬 AI Assistant", "assistant")
+        st.markdown("---")
         if st.button("🔓 Logout", use_container_width=True):
             st.session_state.update({"token": None, "user": None,
                                      "page": "login", "last_result": None})
@@ -380,6 +382,55 @@ def page_export():
             st.error(r.get("message","Export failed."))
 
 
+def page_assistant():
+    st.markdown("## 💬 AI Assistant")
+    st.caption("Ask questions about the ANPR system, your history, or database stats!")
+    
+    # Initialize chat history in session state
+    if "messages" not in st.session_state:
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hi! I'm the ANPR AI Assistant. How can I help you today?"}
+        ]
+        
+    # Display existing messages
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+            
+    # Handle new user input
+    if prompt := st.chat_input("Ask me anything..."):
+        # Display user message
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        
+        # Get AI Response via the Backend API
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking (and maybe querying the DB)..."):
+                try:
+                    # Pass the question to our new backend /chat endpoint
+                    r = ppost("/chat", json={
+                        "message": prompt,
+                        "history": st.session_state.messages[:-1] # Exclude the current prompt
+                    })
+                    
+                    if r.get("success"):
+                        answer_text = r.get("answer", "No answer provided.")
+                        st.markdown(answer_text)
+                        
+                        # Optionally surface the SQL query in a spoiler/expander if ran
+                        sql_ran = r.get("sql_executed")
+                        if sql_ran:
+                            with st.expander("Show Database Query used"):
+                                st.code(sql_ran, language="sql")
+                                
+                        st.session_state.messages.append({"role": "assistant", "content": answer_text})
+                    else:
+                        st.error(r.get("message", "Unknown error from backend API."))
+                except Exception as e:
+                    st.error(f"Error connecting to API server: {e}")
+
+
 # ── Admin pages ────────────────────────────────────────────────────────────────
 
 def page_admin_dashboard():
@@ -520,6 +571,7 @@ PAGE_MAP = {
     "export":           page_export,
     "admin_dashboard":  page_admin_dashboard,
     "admin_users":      page_admin_users,
+    "assistant":        page_assistant,
 }
 
 PROTECTED = {
