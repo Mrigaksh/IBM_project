@@ -4,13 +4,14 @@ Reusable decorators for role and permission enforcement.
 Use these on top of @jwt_required() to gate routes.
 """
 
+from typing import Optional
 from functools import wraps
 from flask import jsonify
 from flask_jwt_extended import get_jwt_identity
 from models import User, Role, Permission
 
 
-def _current_user() -> User | None:
+def _current_user() -> Optional[User]:
     uid = get_jwt_identity()
     if not uid: return None
     try:
