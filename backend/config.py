@@ -123,13 +123,12 @@ class BaseConfig:
     )
 
     # ── CORS ───────────────────────────────────────────────────────────────
-    # Add your Render frontend URL here once deployed, e.g.:
-    # "https://your-streamlit-app.onrender.com"
-CORS_ORIGINS = [
-    "http://localhost:8501",
-    "http://127.0.0.1:8501",
-    "https://ibmproj.streamlit.app",
-]
+    CORS_ORIGINS = [
+        "http://localhost:8501",
+        "http://127.0.0.1:8501",
+        "https://ibmproj.streamlit.app",
+    ]
+
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
