@@ -133,11 +133,12 @@ def _seed_first_admin():
                    admin.username)
 
 
+app = create_app()
+
 if __name__ == "__main__":
-    application = create_app()
-    application.run(
+    app.run(
         host  = "0.0.0.0",
         port  = int(os.getenv("PORT", 5000)),
-        debug = application.config.get("DEBUG", False),
-        use_reloader = False  # DO NOT RESTART if torch modifies its own cache
+        debug = app.config.get("DEBUG", False),
+        use_reloader = False
     )
