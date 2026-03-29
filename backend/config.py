@@ -69,30 +69,37 @@ class BaseConfig:
     JWT_HEADER_TYPE          = "Bearer"
 
     # ── Database ───────────────────────────────────────────────────────────
-    # Priority: DATABASE_URL from .env -> MySQL fallback
+    # Priority: DATABASE_URL from .env -> MySQL/TiDB fallback
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
 
     if not SQLALCHEMY_DATABASE_URI:
         from urllib.parse import quote_plus
         _DB_HOST = os.getenv("DB_HOST",     "localhost")
-        _DB_PORT = os.getenv("DB_PORT",     "3306")
+        _DB_PORT = os.getenv("DB_PORT",     "4000")       # TiDB default port
         _DB_NAME = os.getenv("DB_NAME",     "anpr_db")
         _DB_USER = os.getenv("DB_USER",     "root")
         _DB_PASS = os.getenv("DB_PASSWORD", "")
         SQLALCHEMY_DATABASE_URI = (
             f"mysql+pymysql://{_DB_USER}:{quote_plus(_DB_PASS)}"
             f"@{_DB_HOST}:{_DB_PORT}/{_DB_NAME}"
+            "?charset=utf8mb4"
         )
-    
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Engine options (pooling etc) only for MySQL; SQLite doesn't use these specific ones
+    # TiDB requires SSL — verify_cert=False skips CA validation (safe for TiDB Cloud)
     if "mysql" in (SQLALCHEMY_DATABASE_URI or ""):
         SQLALCHEMY_ENGINE_OPTIONS = {
             "pool_recycle":  280,
             "pool_pre_ping": True,
             "pool_size":     5,
             "max_overflow":  10,
+            "connect_args": {
+                "ssl": {
+                    "verify_cert":     False,
+                    "verify_identity": False,
+                }
+            },
         }
     else:
         SQLALCHEMY_ENGINE_OPTIONS = {}
@@ -102,7 +109,7 @@ class BaseConfig:
         "UPLOAD_FOLDER",
         str(_here / "uploads")
     )
-    ALLOWED_EXTENSIONS     = {"png", "jpg", "jpeg", "bmp", "webp"}
+    ALLOWED_EXTENSIONS        = {"png", "jpg", "jpeg", "bmp", "webp"}
     MAX_CONTENT_LENGTH_NORMAL = int(os.getenv("MAX_CONTENT_LENGTH_NORMAL", 16 * 1024 * 1024))
     MAX_CONTENT_LENGTH_HIGH   = int(os.getenv("MAX_CONTENT_LENGTH_HIGH",   64 * 1024 * 1024))
     MAX_CONTENT_LENGTH        = MAX_CONTENT_LENGTH_HIGH
@@ -116,8 +123,13 @@ class BaseConfig:
     )
 
     # ── CORS ───────────────────────────────────────────────────────────────
-    CORS_ORIGINS = ["http://localhost:8501", "http://127.0.0.1:8501"]
-
+    # Add your Render frontend URL here once deployed, e.g.:
+    # "https://your-streamlit-app.onrender.com"
+CORS_ORIGINS = [
+    "http://localhost:8501",
+    "http://127.0.0.1:8501",
+    "https://ibmproj.streamlit.app",
+]
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
